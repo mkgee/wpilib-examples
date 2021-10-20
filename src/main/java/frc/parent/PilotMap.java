@@ -1,6 +1,9 @@
 package frc.parent; 
 
-public interface PilotMap {
+public class PilotMap {
+
+    private PilotMap() {}
+    
     //Stick ports
     public static int X_AXIS = 0;
     public static int Y_AXIS = 1;
