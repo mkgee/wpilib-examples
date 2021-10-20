@@ -1,7 +1,10 @@
 package frc.parent;
 
 
-public interface ControMap {
+public class ControMap {
+
+    private ControMap() {}
+
     // Joystick Axises
     public static final int L_JOYSTICK_HORIZONTAL = 0;
     public static final int L_JOYSTICK_VERTICAL = 1;

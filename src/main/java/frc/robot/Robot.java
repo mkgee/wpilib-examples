@@ -36,7 +36,7 @@ import java.util.Map;
  * creating this project, you must also update the build.gradle file in the
  * project.
  */
-public class Robot extends TimedRobot implements RobotMap, ControMap {
+public class Robot extends TimedRobot {
   private static final String kDefaultAuto = "Default";
   private static final String kCustomAuto = "My Auto";
   private static final String kResetPIDs = "Reset PIDs";
@@ -58,6 +58,7 @@ public class Robot extends TimedRobot implements RobotMap, ControMap {
    */
   @Override
   public void robotInit() {
+    
     m_chooser.addOption("My Auto", kCustomAuto);
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("Reset PID Values", kResetPIDs);

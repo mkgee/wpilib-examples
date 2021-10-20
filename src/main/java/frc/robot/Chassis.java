@@ -9,7 +9,7 @@ import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Timer;
 
-public class Chassis implements RobotMap{
+public class Chassis {
 
     //Talon objects for the wheels
     //These control the main 4 motors on the robot
