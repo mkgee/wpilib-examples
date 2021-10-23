@@ -10,8 +10,9 @@ import com.revrobotics.ControlType;
 
 public class CCSparkMax extends CANSparkMax{
 
-    CANPIDController pidController;
-    CANEncoder encoder;
+    private String name;
+    private CANPIDController pidController;
+    private CANEncoder encoder;
 
     /**
      * CCSparkMax allows us to easily control Spark Max motor controllers
@@ -21,9 +22,9 @@ public class CCSparkMax extends CANSparkMax{
      * @param idleMode Specify whether the motor controller is set to Coast or Brake mode
      * @param reverse Reverses the direction of the motor controller
      */
-    public CCSparkMax(int deviceID, MotorType controlMode, IdleMode idleMode, boolean reverse){
+    public CCSparkMax(String name, int deviceID, MotorType controlMode, IdleMode idleMode, boolean reverse){
         super(deviceID, controlMode);
-
+        this.name = name;
         if(super.setIdleMode(idleMode) != CANError.kOk){
             System.out.println("Spark Max Idle Mode Not Set");
         }
@@ -91,5 +92,8 @@ public class CCSparkMax extends CANSparkMax{
         pidController.setFF(Ff);
     }
 
+    public String getName() {
+        return name;
+    }
     
 }

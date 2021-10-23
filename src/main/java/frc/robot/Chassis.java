@@ -13,10 +13,14 @@ public class Chassis {
 
     //Talon objects for the wheels
     //These control the main 4 motors on the robot
-    public static CCSparkMax fLeft = new CCSparkMax(RobotMap.FORWARD_LEFT, MotorType.kBrushless, IdleMode.kBrake, RobotMap.FORWARD_LEFT_REVERSE);
-    public static CCSparkMax fRight = new CCSparkMax(RobotMap.FORWARD_RIGHT, MotorType.kBrushless, IdleMode.kBrake, RobotMap.FORWARD_RIGHT_REVERSE);
-    public static CCSparkMax bLeft = new CCSparkMax(RobotMap.BACK_LEFT, MotorType.kBrushless, IdleMode.kBrake, RobotMap.BACK_LEFT_REVERSE);
-    public static CCSparkMax bRight = new CCSparkMax(RobotMap.BACK_RIGHT, MotorType.kBrushless, IdleMode.kBrake, RobotMap.BACK_RIGHT_REVERSE);
+    public static CCSparkMax fLeft = new CCSparkMax("Front Left", RobotMap.FORWARD_LEFT, 
+        MotorType.kBrushless, IdleMode.kBrake, RobotMap.FORWARD_LEFT_REVERSE);
+    public static CCSparkMax fRight = new CCSparkMax("Front Right", RobotMap.FORWARD_RIGHT, 
+        MotorType.kBrushless, IdleMode.kBrake, RobotMap.FORWARD_RIGHT_REVERSE);
+    public static CCSparkMax bLeft = new CCSparkMax("Back Left", RobotMap.BACK_LEFT, 
+        MotorType.kBrushless, IdleMode.kBrake, RobotMap.BACK_LEFT_REVERSE);
+    public static CCSparkMax bRight = new CCSparkMax("Back Right", RobotMap.BACK_RIGHT, 
+        MotorType.kBrushless, IdleMode.kBrake, RobotMap.BACK_RIGHT_REVERSE);
 
     public static CCTalon motor2019 = new CCTalon(RobotMap.TALON, false);
 
