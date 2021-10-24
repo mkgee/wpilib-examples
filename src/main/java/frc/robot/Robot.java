@@ -7,8 +7,6 @@
 
 package frc.robot;
 
-import java.util.Arrays;
-
 import edu.wpi.first.wpilibj.Compressor;
 // import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -44,7 +42,7 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     
-    diagnostics = new Diagnostics(Chassis.bLeft, Chassis.bRight, Chassis.fLeft, Chassis.fRight);
+    diagnostics = new Diagnostics(Chassis.fLeft, Chassis.fRight, Chassis.bLeft, Chassis.bRight);
     m_chooser.addOption("My Auto", kCustomAuto);
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("Reset PID Values", kResetPIDs);

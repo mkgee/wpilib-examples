@@ -8,7 +8,6 @@ import static frc.robot.Chassis.motor2019;
 import static java.util.stream.Collectors.joining;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -21,16 +20,13 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
-import edu.wpi.first.wpilibj.shuffleboard.SimpleWidget;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class Diagnostics {
 
     private final Field2d field = new Field2d();
     private ShuffleboardTab summaryTab = Shuffleboard.getTab("Summary");
-    private SimpleWidget faultWidget;
     private NetworkTableEntry faultEntry;
-    private NetworkTableEntry faultValueEntry;
     private CCSparkMax[] motors;
     private Map<String, NetworkTableEntry> motorFaultMap = new HashMap<>();
   
@@ -59,7 +55,7 @@ public class Diagnostics {
         for(CCSparkMax m : motors) {
             motorFaultMap.put(m.getName(), summaryTab.add(m.getName() + " faults", "")
             .withWidget(BuiltInWidgets.kTextView)
-            .withPosition(col, row)
+            .withPosition(col, row) 
             .withSize(width, 1)
             .getEntry() );
 
@@ -85,8 +81,6 @@ public class Diagnostics {
         }
         // SmartDashboard.putString(motor.getName(), faultMsg);
         motorFaultMap.get(motor.getName()).setString(faultMsg);
-        
-
     }
 
     public void updateStatus() {
@@ -95,8 +89,9 @@ public class Diagnostics {
         int fLeftFault = fLeft.getFaults();
         int fRightFault = fRight.getFaults();
         int allFaults = bLeftFault + bRightFault + fLeftFault + fRightFault;
+
+        // boolean status
         faultEntry.setBoolean(allFaults == 0);
-        // faultValueEntry.setDouble(allFaults);
 
         // update status on SparkMax controllers
         Stream.of(bLeft, bRight, fLeft, fRight).forEach(this::updateStatus);
