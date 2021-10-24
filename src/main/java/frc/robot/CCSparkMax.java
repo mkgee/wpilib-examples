@@ -11,6 +11,7 @@ import com.revrobotics.ControlType;
 public class CCSparkMax extends CANSparkMax{
 
     private String name;
+    private String shortName;
     private CANPIDController pidController;
     private CANEncoder encoder;
 
@@ -22,9 +23,11 @@ public class CCSparkMax extends CANSparkMax{
      * @param idleMode Specify whether the motor controller is set to Coast or Brake mode
      * @param reverse Reverses the direction of the motor controller
      */
-    public CCSparkMax(String name, int deviceID, MotorType controlMode, IdleMode idleMode, boolean reverse){
+    public CCSparkMax(String name, String shortName, int deviceID, MotorType controlMode, IdleMode idleMode,
+     boolean reverse){
         super(deviceID, controlMode);
         this.name = name;
+        this.shortName = shortName;
         if(super.setIdleMode(idleMode) != CANError.kOk){
             System.out.println("Spark Max Idle Mode Not Set");
         }
@@ -96,4 +99,7 @@ public class CCSparkMax extends CANSparkMax{
         return name;
     }
     
+    public String getShortName() {
+        return shortName;
+    }
 }

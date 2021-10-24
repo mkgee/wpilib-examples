@@ -8,12 +8,16 @@ import static frc.robot.Chassis.motor2019;
 import static java.util.stream.Collectors.joining;
 
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.Faults;
+import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.FaultID;
 
 import edu.wpi.first.networktables.NetworkTableEntry;
@@ -24,11 +28,15 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class Diagnostics {
 
+    enum DataType {FAULTS, STICKY_FAULTS, TEMP, INVERTED_STATE, POSITION, VELOCITY};
+
     private final Field2d field = new Field2d();
-    private ShuffleboardTab summaryTab = Shuffleboard.getTab("Summary");
+    private final ShuffleboardTab summaryTab = Shuffleboard.getTab("Summary");
+    private final ShuffleboardTab motorTab = Shuffleboard.getTab("Motors");
     private NetworkTableEntry faultEntry;
     private CCSparkMax[] motors;
-    private Map<String, NetworkTableEntry> motorFaultMap = new HashMap<>();
+    
+    private Map<String, Map<DataType, NetworkTableEntry>> motorEntryMap = new HashMap<>();
   
     public Diagnostics(CCSparkMax... motors) {
         this.motors = motors;
@@ -37,50 +45,137 @@ public class Diagnostics {
     public void init() {
         motor2019.set(ControlMode.PercentOutput, 0);
         SmartDashboard.putData("Field", field);
-        summaryTab = Shuffleboard.getTab("Summary");
+        // summaryTab = Shuffleboard.getTab("Summary");
         
         faultEntry = summaryTab
           .add("Fault Indicator", false)
           .withWidget(BuiltInWidgets.kBooleanBox)
           .getEntry();
-    
-        // faultValueEntry = summaryTab.add("Fault Value", 0)
-        //   .withWidget(BuiltInWidgets.kDial)
-        //   .withProperties(Map.of("Min", 0, "Max", 100))
-        //   .getEntry();
 
-        int row = 1;
-        int col = 0;
-        final int width = 3;
+        int row = 0;
+        final int faultsWidth = 2;
+        // for each motor: Faults, Sticky Faults, Temp, Inverted state, position, velocity
         for(CCSparkMax m : motors) {
-            motorFaultMap.put(m.getName(), summaryTab.add(m.getName() + " faults", "")
+            int col = 0;
+            Map<DataType, NetworkTableEntry> entryMap = new EnumMap<>(DataType.class);
+
+            // initialize motorEntryMap
+            motorEntryMap.put(m.getName(), entryMap);
+
+            final String name = m.getName();
+            final String shortName = m.getShortName();
+
+            // FAULTS
+            entryMap.put(DataType.FAULTS, motorTab.add(name + " faults", "")
             .withWidget(BuiltInWidgets.kTextView)
             .withPosition(col, row) 
-            .withSize(width, 1)
+            .withSize(faultsWidth, 1)
+            .getEntry() );
+            col += faultsWidth;
+            
+            // STICKY_FAULTS
+            entryMap.put(DataType.STICKY_FAULTS, motorTab.add(shortName + " sticky faults", "")
+            .withWidget(BuiltInWidgets.kTextView)
+            .withPosition(col, row) 
+            .withSize(faultsWidth, 1)
+            .getEntry() );
+            col += faultsWidth;
+            
+            // TEMP
+            entryMap.put(DataType.TEMP, motorTab.add(shortName + " temp", "")
+            .withWidget(BuiltInWidgets.kTextView)
+            .withPosition(col++, row) 
+            .withSize(1, 1)
+            .getEntry() );
+            
+            // INVERTED_STATE
+            entryMap.put(DataType.INVERTED_STATE, motorTab.add(shortName + " inv. state", "")
+            .withWidget(BuiltInWidgets.kTextView)
+            .withPosition(col++, row) 
+            .withSize(1, 1)
             .getEntry() );
 
-            if (col == 0) {
-                col += width;
-            } else {
-                col = 0;
-                row++;
-            }
+            // POSITION
+            entryMap.put(DataType.POSITION, motorTab.add(shortName + "  position", "")
+            .withWidget(BuiltInWidgets.kTextView)
+            .withPosition(col++, row) 
+            .withSize(1, 1)
+            .getEntry() );
 
+            // VELOCITY
+            entryMap.put(DataType.VELOCITY, motorTab.add(shortName + "  velocity", "")
+            .withWidget(BuiltInWidgets.kTextView)
+            .withPosition(col++, row) 
+            .withSize(1, 1)
+            .getEntry() );
+            
+            row++;
         }
-        Shuffleboard.selectTab("summary");
+
+        Shuffleboard.selectTab("Motors");
+    }
+
+    private void updateFaultStatus(NetworkTableEntry entry, Supplier<Short> faultsSupplier, 
+                    Function<CANSparkMax.FaultID, Boolean> faultSupplier) {
+                        int fault = faultsSupplier.get();
+                        String faultMsg = "No fault";
+                        if (fault != 0) {
+                            faultMsg = Arrays.stream(FaultID.values())
+                                .filter(v -> faultSupplier.apply(v))
+                                .map(FaultID::name)
+                                .collect(joining(","));
+                        }
+                        entry.setString(faultMsg); 
     }
     
-    private void updateStatus(CCSparkMax motor) {
-        int fault = motor.getFaults();
-        String faultMsg = "No fault";
-        if (fault != 0) {
-            faultMsg = Arrays.stream(FaultID.values())
-                .filter(motor::getFault)
-                .map(FaultID::name)
-                .collect(joining(","));
+    private NetworkTableEntry getEntry(CCSparkMax motor, DataType type) {
+        return motorEntryMap.get(motor.getName()).get(type);
+        
+    }
+
+    private void updateFaultStatus(CCSparkMax motor, DataType type) {
+        if (type.equals(DataType.FAULTS)) {
+            updateFaultStatus(getEntry(motor,type), motor::getFaults, motor::getFault);
+        } else {
+            updateFaultStatus(getEntry(motor,type), motor::getStickyFaults, motor::getStickyFault);
         }
-        // SmartDashboard.putString(motor.getName(), faultMsg);
-        motorFaultMap.get(motor.getName()).setString(faultMsg);
+    }
+
+    private void updateDoubleStatus(CCSparkMax motor, DataType type) {
+        
+        switch(type) {
+            case TEMP:
+                getEntry(motor,type).setString(Double.toString(motor.getMotorTemperature()));
+                break;
+            case POSITION:
+                getEntry(motor,type).setString(Double.toString(motor.getEncoder().getPosition()));
+                break;
+            case VELOCITY:
+                getEntry(motor,type).setString(Double.toString(motor.getEncoder().getVelocity()));
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void updateStatus(CCSparkMax motor, DataType type) {
+
+        switch(type) {
+            case FAULTS:
+            case STICKY_FAULTS:
+                updateFaultStatus(motor, type);
+                break;
+            case TEMP:
+            case POSITION:
+            case VELOCITY:
+                updateDoubleStatus(motor,type);
+                break;
+            case INVERTED_STATE: {
+                String msg = motor.getInverted() ? "inverted" : "";
+                getEntry(motor, type).setString(msg);
+            }
+            break;
+        }
     }
 
     public void updateStatus() {
@@ -94,7 +189,9 @@ public class Diagnostics {
         faultEntry.setBoolean(allFaults == 0);
 
         // update status on SparkMax controllers
-        Stream.of(bLeft, bRight, fLeft, fRight).forEach(this::updateStatus);
+        Stream.of(bLeft, bRight, fLeft, fRight).forEach(motor -> {
+            Arrays.stream(DataType.values()).forEach(type -> updateStatus(motor,type));
+        });
         
         // update status on phoenix talon controllers
         Faults faults= new Faults();
