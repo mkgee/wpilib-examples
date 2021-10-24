@@ -81,13 +81,6 @@ public class Diagnostics {
             .getEntry() );
             col += faultsWidth;
             
-            // TEMP
-            entryMap.put(DataType.TEMP, motorTab.add(shortName + " temp", "")
-            .withWidget(BuiltInWidgets.kTextView)
-            .withPosition(col++, row) 
-            .withSize(1, 1)
-            .getEntry() );
-            
             // INVERTED_STATE
             entryMap.put(DataType.INVERTED_STATE, motorTab.add(shortName + " inv. state", "")
             .withWidget(BuiltInWidgets.kTextView)
@@ -96,20 +89,30 @@ public class Diagnostics {
             .getEntry() );
 
             // POSITION
-            entryMap.put(DataType.POSITION, motorTab.add(shortName + "  position", "")
+            entryMap.put(DataType.POSITION, motorTab.add(shortName + "  position", 0)
             .withWidget(BuiltInWidgets.kTextView)
             .withPosition(col++, row) 
             .withSize(1, 1)
             .getEntry() );
 
+            // TEMP
+            entryMap.put(DataType.TEMP, motorTab.add(shortName + " temp", 0)
+            .withWidget(BuiltInWidgets.kDial)
+            .withPosition(col++, row) 
+            .withSize(1, 1)
+            .withProperties(Map.of("Min", 10, "Max", 100))  //celsius
+            .getEntry() );
+            
+            
             // VELOCITY
-            entryMap.put(DataType.VELOCITY, motorTab.add(shortName + "  velocity", "")
-            .withWidget(BuiltInWidgets.kTextView)
+            entryMap.put(DataType.VELOCITY, motorTab.add(shortName + "  velocity", 0)
+            .withWidget(BuiltInWidgets.kDial)
             .withPosition(col++, row) 
             .withSize(1, 1)
             .getEntry() );
             
             row++;
+            
         }
 
         Shuffleboard.selectTab("Motors");
@@ -145,13 +148,13 @@ public class Diagnostics {
         
         switch(type) {
             case TEMP:
-                getEntry(motor,type).setString(Double.toString(motor.getMotorTemperature()));
+                getEntry(motor,type).setDouble(motor.getMotorTemperature());
                 break;
             case POSITION:
                 getEntry(motor,type).setString(Double.toString(motor.getEncoder().getPosition()));
                 break;
             case VELOCITY:
-                getEntry(motor,type).setString(Double.toString(motor.getEncoder().getVelocity()));
+                getEntry(motor,type).setDouble(motor.getEncoder().getVelocity());
                 break;
             default:
                 break;
