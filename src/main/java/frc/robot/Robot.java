@@ -31,7 +31,7 @@ public class Robot extends TimedRobot {
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
   private Compressor c = new Compressor();
 
-  private Diagnostics diagnostics;
+  private Diagnostics2 diagnostics;
   int alliance;
   double spdmlt = 1;
 
@@ -42,7 +42,7 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     
-    diagnostics = new Diagnostics(Chassis.fLeft, Chassis.fRight, Chassis.bLeft, Chassis.bRight);
+    diagnostics = new Diagnostics2(Chassis.fLeft, Chassis.fRight, Chassis.bLeft, Chassis.bRight);
     m_chooser.addOption("My Auto", kCustomAuto);
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("Reset PID Values", kResetPIDs);
