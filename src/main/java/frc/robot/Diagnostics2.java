@@ -4,11 +4,14 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.List;
+import java.util.ArrayList;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.FaultID;
 
 import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -20,14 +23,23 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 public class Diagnostics2 {
 
     enum DataType {FAULTS, STICKY_FAULTS, TEMP, INVERTED_STATE, POSITION, VELOCITY};
-
+    enum PowerDataType {VOLTAGE, TEMP, CURRENT, ENERGY };
     private final ShuffleboardTab summaryTab = Shuffleboard.getTab("Summary");
     private final ShuffleboardTab motorTab = Shuffleboard.getTab("Motors");
+    private final ShuffleboardTab powerTab = Shuffleboard.getTab("Power");
     private NetworkTableEntry faultEntry;
-    private CCSparkMax[] motors;
     
+    private CCSparkMax[] motors;
+    private PowerDistributionPanel pdp = new PowerDistributionPanel(0);
+
+    // key -> motor name, value -> map (key -> DataType, value -> NetworkTableEntry)
     private Map<String, Map<DataType, NetworkTableEntry>> motorEntryMap = new HashMap<>();
-  
+
+    // key -> PowerDataType, value -> NetworkTableEntry
+    private Map<PowerDataType, NetworkTableEntry> powerEntryMap = new HashMap<>();
+    private List<NetworkTableEntry> powerChannels = new ArrayList<>();
+    private final static int NUM_POWER_CHANNELS = 8;
+
     public Diagnostics2(CCSparkMax... motors) {
         this.motors = motors;
     }
@@ -100,6 +112,46 @@ public class Diagnostics2 {
             row++;
         }
 
+        row = 0;
+        int col = 0;
+        // Power tab
+
+        // Voltage
+        powerEntryMap.put(PowerDataType.VOLTAGE, powerTab.add("Voltage", 0)
+            .withWidget(BuiltInWidgets.kDial)
+            .withPosition(col++, row)
+            .withSize(1,1)
+            .getEntry());
+
+        // temperature
+        powerEntryMap.put(PowerDataType.TEMP, powerTab.add("Temperature", 0)
+            .withWidget(BuiltInWidgets.kDial)
+            .withPosition(col++, row)
+            .withSize(1,1)
+            .getEntry());
+
+        // total current
+        powerEntryMap.put(PowerDataType.CURRENT, powerTab.add("Total Current", 0)
+            .withWidget(BuiltInWidgets.kDial)
+            .withPosition(col++, row)
+            .withSize(1,1)
+            .getEntry());
+
+        powerEntryMap.put(PowerDataType.ENERGY, powerTab.add("Total Energy", 0)
+            .withWidget(BuiltInWidgets.kDial)
+            .withPosition(col++, row)
+            .withSize(1,1)
+            .getEntry());
+        
+        row++;
+        col = 0;
+        for (int i=0; i < NUM_POWER_CHANNELS; i++) {
+            powerChannels.add(powerTab.add("Channel " + i + " current", 0)
+                .withWidget(BuiltInWidgets.kDial)
+                .withPosition(col++, row)
+                .withSize(1,1)
+                .getEntry());
+        }
         Shuffleboard.selectTab("Motors");
     }
     
@@ -182,6 +234,37 @@ public class Diagnostics2 {
         }
     }
 
+    private void updatePowerStatus(PowerDataType dataType) {
+
+        double value = 0.0 ;
+        switch(dataType) {
+            case VOLTAGE:
+                value = pdp.getVoltage();
+                break;
+            case TEMP:
+                value = pdp.getTemperature();
+                break;
+            case CURRENT:
+                value = pdp.getTotalCurrent();
+                break;
+            case ENERGY:
+                value = pdp.getTotalEnergy();
+                break;
+            default:
+                System.err.println("Unsupported PowerDataType : " + dataType);
+                return;
+        }
+        powerEntryMap.get(dataType).setDouble(value);
+    }
+
+    private void updateCurrentStatus(int channel) {
+        if (channel < powerChannels.size()) {
+            powerChannels.get(channel).setDouble(pdp.getCurrent(channel));
+        } else {
+            System.err.println("Invalid channel: " + channel);
+        }
+    }
+
     public void updateStatus() {
        
         int allFaults = 0;
@@ -197,6 +280,16 @@ public class Diagnostics2 {
             for(DataType type : DataType.values()) {
                 updateStatus(motor, type);
             }
+        }
+
+        // update status of Power Distribution Panel
+        for (PowerDataType type : PowerDataType.values()) {
+            updatePowerStatus(type);
+        }
+
+        // update current for individual channels
+        for(int i=0, size = powerChannels.size(); i < size; i++) {
+            updateCurrentStatus(i);
         }
         
     }
